@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, CheckCircle2, Plus, Trash2, Save } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { AlertCircle, CheckCircle2, Plus, Trash2, Save, ShoppingCart, ArrowLeft } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useNavigate } from "react-router-dom";
 
 interface BuildComponent {
   category: string;
@@ -35,6 +36,8 @@ const componentCategories = [
 
 export default function Builder() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [buildName, setBuildName] = useState("My Custom Build");
   const [components, setComponents] = useState<BuildComponent[]>(
     componentCategories.map(cat => ({
@@ -187,6 +190,7 @@ export default function Builder() {
         description: "Please sign in to save your build",
         variant: "destructive"
       });
+      navigate('/auth');
       return;
     }
 
@@ -212,6 +216,7 @@ export default function Builder() {
       });
 
     if (error) {
+      console.error('Save error:', error);
       toast({
         title: "Error",
         description: "Failed to save build",
@@ -225,6 +230,54 @@ export default function Builder() {
     }
   };
 
+  const addAllToCart = async () => {
+    if (!session) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to add items to cart",
+        variant: "destructive"
+      });
+      navigate('/auth');
+      return;
+    }
+
+    const selectedProducts = components.filter(c => c.productId);
+    
+    if (selectedProducts.length === 0) {
+      toast({
+        title: "No components",
+        description: "Please select components first",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      for (const component of selectedProducts) {
+        await supabase
+          .from('cart_items')
+          .insert({
+            user_id: session.user.id,
+            product_id: component.productId!,
+            quantity: 1
+          });
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['cart-count'] });
+      toast({
+        title: "Added to cart",
+        description: `${selectedProducts.length} items added to your cart`
+      });
+    } catch (error) {
+      console.error('Add to cart error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add items to cart",
+        variant: "destructive"
+      });
+    }
+  };
+
   const compatibilityIssues = checkCompatibility();
   const hasErrors = compatibilityIssues.some(i => i.type === 'error');
   const totalPrice = getTotalPrice();
@@ -234,6 +287,10 @@ export default function Builder() {
       <Navbar />
 
       <div className="container py-8">
+        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4">
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back
+        </Button>
+
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">PC Builder</h1>
           <p className="text-muted-foreground">
@@ -385,9 +442,10 @@ export default function Builder() {
                     <Button
                       variant="outline"
                       className="w-full"
+                      onClick={addAllToCart}
                       disabled={hasErrors || totalPrice === 0}
                     >
-                      <Plus className="mr-2 h-4 w-4" />
+                      <ShoppingCart className="mr-2 h-4 w-4" />
                       Add All to Cart
                     </Button>
                   </div>

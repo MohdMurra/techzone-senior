@@ -3,6 +3,7 @@ import { ShoppingCart, User, Search, Menu, Cpu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -93,9 +94,20 @@ export const Navbar = () => {
             </Link>
           )}
 
-          <Button variant="ghost" size="icon" className="lg:hidden">
-            <Menu className="h-5 w-5" />
-          </Button>
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="lg:hidden">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent>
+              <div className="flex flex-col gap-4 mt-8">
+                <Link to="/products" className="text-lg font-medium">Products</Link>
+                <Link to="/builder" className="text-lg font-medium">PC Builder</Link>
+                <Link to="/builds" className="text-lg font-medium">Community</Link>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </nav>
