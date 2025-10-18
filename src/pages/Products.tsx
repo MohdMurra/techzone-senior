@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navbar } from "@/components/Navbar";
 import { ProductCard } from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,16 @@ export default function Products() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [priceRange, setPriceRange] = useState([0, 5000]);
   const [sortBy, setSortBy] = useState("featured");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Get search query from URL on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const search = params.get('search');
+    if (search) {
+      setSearchQuery(search);
+    }
+  }, []);
 
   const { data: products, isLoading } = useQuery({
     queryKey: ['products', selectedCategory, sortBy],
@@ -40,9 +50,14 @@ export default function Products() {
     }
   });
 
-  const filteredProducts = products?.filter(
-    p => Number(p.price) >= priceRange[0] && Number(p.price) <= priceRange[1]
-  );
+  const filteredProducts = products?.filter(product => {
+    const price = Number(product.price);
+    const matchesPrice = price >= priceRange[0] && price <= priceRange[1];
+    const matchesSearch = !searchQuery || 
+      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesPrice && matchesSearch;
+  });
 
   return (
     <div className="min-h-screen flex flex-col">

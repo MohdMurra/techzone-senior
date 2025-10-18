@@ -11,6 +11,13 @@ import { useQuery } from "@tanstack/react-query";
 export const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      window.location.href = `/products?search=${encodeURIComponent(searchQuery)}`;
+    }
+  };
+
   const { data: session } = useQuery({
     queryKey: ['session'],
     queryFn: async () => {
@@ -44,7 +51,7 @@ export const Navbar = () => {
         </Link>
 
         {/* Search */}
-        <div className="hidden md:flex flex-1 max-w-md mr-8">
+        <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md mr-8">
           <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -54,7 +61,7 @@ export const Navbar = () => {
               className="pl-10"
             />
           </div>
-        </div>
+        </form>
 
         {/* Navigation Links */}
         <div className="hidden lg:flex items-center space-x-6 mr-auto">

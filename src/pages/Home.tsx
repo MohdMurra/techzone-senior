@@ -175,8 +175,8 @@ export default function Home() {
               <h4 className="font-semibold mb-4">Support</h4>
               <ul className="space-y-2 text-sm">
                 <li><a href="#" className="text-muted-foreground hover:text-primary">Contact Us</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-primary">Shipping Info</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-primary">Returns</a></li>
+                <li><Link to="/shipping" className="text-muted-foreground hover:text-primary">Shipping Info</Link></li>
+                <li><Link to="/returns" className="text-muted-foreground hover:text-primary">Returns</Link></li>
               </ul>
             </div>
             <div>
