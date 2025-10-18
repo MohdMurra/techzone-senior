@@ -108,7 +108,9 @@ export default function Cart() {
                     <span>${total.toFixed(2)}</span>
                   </div>
                 </div>
-                <Button className="w-full">Proceed to Checkout</Button>
+                <Button className="w-full" onClick={() => navigate('/checkout')}>
+                  Proceed to Checkout
+                </Button>
               </div>
             </div>
           </div>

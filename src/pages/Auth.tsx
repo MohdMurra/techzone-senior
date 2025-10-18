@@ -131,6 +131,11 @@ export default function Auth() {
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? "Signing in..." : "Sign In"}
                   </Button>
+                  <div className="text-center mt-4">
+                    <Link to="/reset-password" className="text-sm text-muted-foreground hover:text-primary">
+                      Forgot password?
+                    </Link>
+                  </div>
                 </form>
               </TabsContent>
 
