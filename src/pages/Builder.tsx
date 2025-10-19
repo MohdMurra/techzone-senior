@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, CheckCircle2, Plus, Trash2, Save, ShoppingCart, ArrowLeft } from "lucide-react";
+import { AlertCircle, CheckCircle2, Plus, Trash2, Save, ShoppingCart, ArrowLeft, Share2 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -47,6 +47,10 @@ export default function Builder() {
     }))
   );
 
+  // Get build ID from URL if loading a build
+  const urlParams = new URLSearchParams(window.location.search);
+  const loadBuildId = urlParams.get('load');
+
   const { data: session } = useQuery({
     queryKey: ['session'],
     queryFn: async () => {
@@ -65,6 +69,46 @@ export default function Builder() {
       return data || [];
     }
   });
+
+  // Load build if ID is provided
+  const { data: loadedBuild } = useQuery({
+    queryKey: ['load-build', loadBuildId],
+    queryFn: async () => {
+      if (!loadBuildId) return null;
+      const { data } = await supabase
+        .from('builds')
+        .select('*')
+        .eq('id', loadBuildId)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!loadBuildId
+  });
+
+  // Apply loaded build data when available
+  if (loadedBuild && availableProducts && components.every(c => !c.productId)) {
+    setBuildName(loadedBuild.name);
+    const buildComponents = loadedBuild.components as any;
+    
+    const loadedComponents = componentCategories.map(cat => {
+      const savedComp = buildComponents[cat.key];
+      if (savedComp) {
+        const product = availableProducts.find((p: any) => p.id === savedComp.id);
+        return {
+          category: cat.key,
+          productId: savedComp.id,
+          product: product || null
+        };
+      }
+      return {
+        category: cat.key,
+        productId: null,
+        product: null
+      };
+    });
+    
+    setComponents(loadedComponents);
+  }
 
   const getProductsForCategory = (category: string) => {
     return availableProducts?.filter(p => p.category === category) || [];
@@ -183,7 +227,7 @@ export default function Builder() {
     }, 0);
   };
 
-  const saveBuild = async () => {
+  const saveBuild = async (isPublic: boolean = false) => {
     if (!session) {
       toast({
         title: "Sign in required",
@@ -212,7 +256,7 @@ export default function Builder() {
         name: buildName,
         components: componentsData,
         total_price: getTotalPrice(),
-        is_public: false
+        is_public: isPublic
       });
 
     if (error) {
@@ -224,8 +268,8 @@ export default function Builder() {
       });
     } else {
       toast({
-        title: "Build saved!",
-        description: "Your build has been saved to your profile"
+        title: isPublic ? "Build shared!" : "Build saved!",
+        description: isPublic ? "Your build is now visible in the community" : "Your build has been saved to your profile"
       });
     }
   };
@@ -433,11 +477,19 @@ export default function Builder() {
                   <div className="space-y-2 pt-4">
                     <Button
                       className="w-full"
-                      onClick={saveBuild}
+                      onClick={() => saveBuild(false)}
                       disabled={!session}
                     >
                       <Save className="mr-2 h-4 w-4" />
                       Save Build
+                    </Button>
+                    <Button
+                      className="w-full"
+                      onClick={() => saveBuild(true)}
+                      disabled={!session}
+                    >
+                      <Share2 className="mr-2 h-4 w-4" />
+                      Share Build
                     </Button>
                     <Button
                       variant="outline"

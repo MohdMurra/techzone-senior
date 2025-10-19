@@ -17,7 +17,7 @@ export default function Admin() {
     }
   });
 
-  const { data: isAdmin } = useQuery({
+  const { data: isAdmin, isLoading } = useQuery({
     queryKey: ['admin-check', session?.user?.id],
     queryFn: async () => {
       if (!session?.user?.id) return false;
@@ -26,13 +26,26 @@ export default function Admin() {
         .select('role')
         .eq('user_id', session.user.id)
         .eq('role', 'admin')
-        .single();
+        .maybeSingle();
       return !!data;
     },
     enabled: !!session?.user?.id
   });
 
-  if (!session || isAdmin === false) {
+  if (!session) {
+    return <Navigate to="/auth" />;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="container py-8">Loading...</div>
+      </div>
+    );
+  }
+
+  if (isAdmin === false) {
     return <Navigate to="/" />;
   }
 

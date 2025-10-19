@@ -94,17 +94,20 @@ export default function Profile() {
 
   const deleteBuildMutation = useMutation({
     mutationFn: async (buildId: string) => {
+      if (!session?.user?.id) throw new Error("Not authenticated");
       const { error } = await supabase
         .from('builds')
         .delete()
-        .eq('id', buildId);
+        .eq('id', buildId)
+        .eq('user_id', session.user.id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-builds'] });
       toast({ title: "Build deleted successfully" });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Delete error:', error);
       toast({ title: "Failed to delete build", variant: "destructive" });
     }
   });
