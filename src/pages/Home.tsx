@@ -1,7 +1,7 @@
 import { Navbar } from "@/components/Navbar";
 import { ProductCard } from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Cpu, Zap, Shield } from "lucide-react";
+import { ArrowRight, Cpu, Zap, Shield, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -56,6 +56,12 @@ export default function Home() {
               <Link to="/products">
                 <Button size="lg" variant="outline">
                   Shop Products
+                </Button>
+              </Link>
+              <Link to="/learning-hub">
+                <Button size="lg" variant="secondary">
+                  <BookOpen className="mr-2 h-4 w-4" />
+                  Learning Hub
                 </Button>
               </Link>
             </div>

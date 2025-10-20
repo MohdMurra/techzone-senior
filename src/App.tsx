@@ -15,6 +15,10 @@ import Checkout from "./pages/Checkout";
 import Admin from "./pages/Admin";
 import Profile from "./pages/Profile";
 import Builds from "./pages/Builds";
+import LearningHub from "./pages/LearningHub";
+import CourseDetail from "./pages/CourseDetail";
+import LessonDetail from "./pages/LessonDetail";
+import BlogDetail from "./pages/BlogDetail";
 import Shipping from "./pages/Shipping";
 import Returns from "./pages/Returns";
 import ResetPassword from "./pages/ResetPassword";
@@ -42,6 +46,10 @@ const App = () => (
           <Route path="/admin" element={<Admin />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/builds" element={<Builds />} />
+          <Route path="/learning-hub" element={<LearningHub />} />
+          <Route path="/course/:id" element={<CourseDetail />} />
+          <Route path="/lesson/:id" element={<LessonDetail />} />
+          <Route path="/blog/:slug" element={<BlogDetail />} />
           <Route path="/shipping" element={<Shipping />} />
           <Route path="/returns" element={<Returns />} />
           <Route path="/reset-password" element={<ResetPassword />} />

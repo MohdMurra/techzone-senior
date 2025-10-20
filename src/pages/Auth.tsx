@@ -59,7 +59,7 @@ export default function Auth() {
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data: authData, error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
@@ -77,7 +77,24 @@ export default function Auth() {
         title: "Welcome back!",
         description: "You've successfully signed in."
       });
-      navigate('/');
+
+      // Check if user is admin
+      if (authData.user) {
+        const { data: userRole } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', authData.user.id)
+          .eq('role', 'admin')
+          .maybeSingle();
+
+        if (userRole) {
+          navigate('/admin');
+        } else {
+          navigate('/');
+        }
+      } else {
+        navigate('/');
+      }
     }
   };
 
