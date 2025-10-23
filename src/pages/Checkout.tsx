@@ -19,9 +19,6 @@ const checkoutSchema = z.object({
   city: z.string().min(2, "City is required"),
   state: z.string().min(2, "State is required"),
   zipCode: z.string().min(5, "ZIP code is required"),
-  cardNumber: z.string().min(16, "Invalid card number"),
-  cardExpiry: z.string().regex(/^\d{2}\/\d{2}$/, "Format: MM/YY"),
-  cardCVV: z.string().min(3, "CVV must be 3-4 digits"),
 });
 
 export default function Checkout() {
@@ -37,9 +34,6 @@ export default function Checkout() {
     city: "",
     state: "",
     zipCode: "",
-    cardNumber: "",
-    cardExpiry: "",
-    cardCVV: "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -268,49 +262,21 @@ export default function Checkout() {
               </Card>
 
               {/* Payment Information */}
+              {/* Payment Notice */}
               <Card>
                 <CardHeader>
                   <div className="flex items-center gap-2">
                     <CreditCard className="h-5 w-5" />
                     <CardTitle>Payment Information</CardTitle>
                   </div>
-                  <CardDescription>Enter your card details</CardDescription>
+                  <CardDescription>Demo Mode</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="cardNumber">Card Number</Label>
-                    <Input
-                      id="cardNumber"
-                      placeholder="1234 5678 9012 3456"
-                      value={formData.cardNumber}
-                      onChange={(e) => handleChange('cardNumber', e.target.value)}
-                      className={errors.cardNumber ? 'border-destructive' : ''}
-                    />
-                    {errors.cardNumber && <p className="text-sm text-destructive mt-1">{errors.cardNumber}</p>}
-                  </div>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="cardExpiry">Expiry Date</Label>
-                      <Input
-                        id="cardExpiry"
-                        placeholder="MM/YY"
-                        value={formData.cardExpiry}
-                        onChange={(e) => handleChange('cardExpiry', e.target.value)}
-                        className={errors.cardExpiry ? 'border-destructive' : ''}
-                      />
-                      {errors.cardExpiry && <p className="text-sm text-destructive mt-1">{errors.cardExpiry}</p>}
-                    </div>
-                    <div>
-                      <Label htmlFor="cardCVV">CVV</Label>
-                      <Input
-                        id="cardCVV"
-                        placeholder="123"
-                        value={formData.cardCVV}
-                        onChange={(e) => handleChange('cardCVV', e.target.value)}
-                        className={errors.cardCVV ? 'border-destructive' : ''}
-                      />
-                      {errors.cardCVV && <p className="text-sm text-destructive mt-1">{errors.cardCVV}</p>}
-                    </div>
+                <CardContent>
+                  <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p className="text-sm text-yellow-800">
+                      <strong>Demo Mode:</strong> Payment processing will be integrated with a secure payment provider (Stripe/PayPal) before production launch. 
+                      For now, orders are placed without payment collection for testing purposes only.
+                    </p>
                   </div>
                 </CardContent>
               </Card>
