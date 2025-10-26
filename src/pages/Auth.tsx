@@ -64,9 +64,8 @@ export default function Auth() {
       password
     });
 
-    setIsLoading(false);
-
     if (error) {
+      setIsLoading(false);
       toast({
         title: "Error",
         description: error.message,
@@ -82,6 +81,8 @@ export default function Auth() {
           .eq('role', 'admin')
           .maybeSingle();
 
+        setIsLoading(false);
+        
         toast({
           title: "Welcome back!",
           description: "You've successfully signed in."
@@ -93,6 +94,7 @@ export default function Auth() {
           navigate('/');
         }
       } else {
+        setIsLoading(false);
         toast({
           title: "Welcome back!",
           description: "You've successfully signed in."
