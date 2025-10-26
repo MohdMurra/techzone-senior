@@ -15,10 +15,21 @@ export const UserManagement = () => {
   const { data: users, isLoading } = useQuery({
     queryKey: ['admin-users'],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .select('*, user_roles(role)')
         .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching users:', error);
+        toast({ 
+          title: "Error loading users", 
+          description: error.message, 
+          variant: "destructive" 
+        });
+        return [];
+      }
+      
       return data || [];
     }
   });

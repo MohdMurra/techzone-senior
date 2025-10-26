@@ -73,12 +73,7 @@ export default function Auth() {
         variant: "destructive"
       });
     } else {
-      toast({
-        title: "Welcome back!",
-        description: "You've successfully signed in."
-      });
-
-      // Check if user is admin
+      // Check if user is admin BEFORE showing toast
       if (authData.user) {
         const { data: userRole } = await supabase
           .from('user_roles')
@@ -87,12 +82,21 @@ export default function Auth() {
           .eq('role', 'admin')
           .maybeSingle();
 
+        toast({
+          title: "Welcome back!",
+          description: "You've successfully signed in."
+        });
+
         if (userRole) {
           navigate('/admin');
         } else {
           navigate('/');
         }
       } else {
+        toast({
+          title: "Welcome back!",
+          description: "You've successfully signed in."
+        });
         navigate('/');
       }
     }
