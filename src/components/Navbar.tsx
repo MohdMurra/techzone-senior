@@ -39,6 +39,20 @@ export const Navbar = () => {
     enabled: !!session?.user?.id
   });
 
+  const { data: userRole } = useQuery({
+    queryKey: ['user-role', session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return null;
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
+      return data?.role || null;
+    },
+    enabled: !!session?.user?.id
+  });
+
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
@@ -74,6 +88,16 @@ export const Navbar = () => {
           <Link to="/builds" className="text-sm font-medium hover:text-primary transition-colors">
             Community
           </Link>
+          {userRole === 'moderator' && (
+            <Link to="/moderator" className="text-sm font-medium hover:text-primary transition-colors">
+              Moderator
+            </Link>
+          )}
+          {userRole === 'admin' && (
+            <Link to="/admin" className="text-sm font-medium hover:text-primary transition-colors">
+              Admin
+            </Link>
+          )}
         </div>
 
         {/* Actions */}
