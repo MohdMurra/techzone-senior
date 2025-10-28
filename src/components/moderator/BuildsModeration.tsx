@@ -8,19 +8,25 @@ export function BuildsModeration() {
   const { data: builds, isLoading } = useQuery({
     queryKey: ['moderator-builds'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: buildsData, error } = await supabase
         .from('builds')
-        .select(`
-          *,
-          profiles (
-            full_name,
-            email
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data;
+      
+      // Fetch profiles separately
+      const userIds = [...new Set(buildsData?.map(b => b.user_id) || [])];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .in('id', userIds);
+      
+      // Combine builds with profiles
+      return buildsData?.map(build => ({
+        ...build,
+        profile: profiles?.find(p => p.id === build.user_id)
+      })) || [];
     }
   });
 
@@ -57,7 +63,7 @@ export function BuildsModeration() {
             </p>
             <div className="flex items-center justify-between text-sm">
               <div className="text-muted-foreground">
-                By {build.profiles?.full_name || build.profiles?.email || "Unknown"}
+                By {build.profile?.full_name || build.profile?.email || "Unknown"}
               </div>
               <div className="text-muted-foreground">
                 {new Date(build.created_at).toLocaleDateString()}

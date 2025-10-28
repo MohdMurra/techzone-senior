@@ -26,12 +26,26 @@ export default function Builds() {
   const { data: publicBuilds } = useQuery({
     queryKey: ['public-builds'],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data: buildsData } = await supabase
         .from('builds')
         .select('*')
         .eq('is_public', true)
         .order('likes_count', { ascending: false });
-      return data || [];
+      
+      if (!buildsData) return [];
+      
+      // Fetch profiles for build creators
+      const userIds = [...new Set(buildsData.map(b => b.user_id))];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .in('id', userIds);
+      
+      // Combine builds with creator profiles
+      return buildsData.map(build => ({
+        ...build,
+        creator: profiles?.find(p => p.id === build.user_id)
+      }));
     }
   });
 
@@ -173,6 +187,9 @@ export default function Builds() {
                     {build.description && (
                       <CardDescription>{build.description}</CardDescription>
                     )}
+                    <div className="text-sm text-muted-foreground mt-2">
+                      By {build.creator?.full_name || build.creator?.email || 'Anonymous'}
+                    </div>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">

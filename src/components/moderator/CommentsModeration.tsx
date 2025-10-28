@@ -13,22 +13,33 @@ export function CommentsModeration() {
   const { data: comments, isLoading } = useQuery({
     queryKey: ['moderator-comments'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: commentsData, error } = await supabase
         .from('build_comments')
-        .select(`
-          *,
-          profiles (
-            full_name,
-            email
-          ),
-          builds (
-            name
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data;
+      
+      // Fetch profiles and builds separately
+      const userIds = [...new Set(commentsData?.map(c => c.user_id) || [])];
+      const buildIds = [...new Set(commentsData?.map(c => c.build_id) || [])];
+      
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .in('id', userIds);
+      
+      const { data: builds } = await supabase
+        .from('builds')
+        .select('id, name')
+        .in('id', buildIds);
+      
+      // Combine comments with profiles and builds
+      return commentsData?.map(comment => ({
+        ...comment,
+        profile: profiles?.find(p => p.id === comment.user_id),
+        build: builds?.find(b => b.id === comment.build_id)
+      })) || [];
     }
   });
 
@@ -72,7 +83,7 @@ export function CommentsModeration() {
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <CardTitle className="text-sm font-medium text-muted-foreground mb-2">
-                  On build: {comment.builds?.name || "Unknown"}
+                  On build: {comment.build?.name || "Unknown"}
                 </CardTitle>
                 <p className="text-base">{comment.content}</p>
               </div>
@@ -101,7 +112,7 @@ export function CommentsModeration() {
           </CardHeader>
           <CardContent>
             <div className="text-sm text-muted-foreground">
-              By {comment.profiles?.full_name || comment.profiles?.email || "Unknown"} • {new Date(comment.created_at).toLocaleDateString()}
+              By {comment.profile?.full_name || comment.profile?.email || "Unknown"} • {new Date(comment.created_at).toLocaleDateString()}
             </div>
           </CardContent>
         </Card>

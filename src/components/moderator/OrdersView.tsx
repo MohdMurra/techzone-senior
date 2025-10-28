@@ -7,19 +7,25 @@ export function OrdersView() {
   const { data: orders, isLoading } = useQuery({
     queryKey: ['moderator-orders'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: ordersData, error } = await supabase
         .from('orders')
-        .select(`
-          *,
-          profiles (
-            full_name,
-            email
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data;
+      
+      // Fetch profiles separately
+      const userIds = [...new Set(ordersData?.map(o => o.user_id) || [])];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .in('id', userIds);
+      
+      // Combine orders with profiles
+      return ordersData?.map(order => ({
+        ...order,
+        profile: profiles?.find(p => p.id === order.user_id)
+      })) || [];
     }
   });
 
@@ -65,7 +71,7 @@ export function OrdersView() {
             <div className="space-y-2">
               <div>
                 <span className="font-medium">Customer:</span>{" "}
-                {order.profiles?.full_name || order.profiles?.email || "Unknown"}
+                {order.profile?.full_name || order.profile?.email || "Unknown"}
               </div>
               <div>
                 <span className="font-medium">Shipping Address:</span>{" "}
