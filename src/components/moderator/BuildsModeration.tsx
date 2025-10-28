@@ -2,7 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export function BuildsModeration() {
   const { data: builds, isLoading } = useQuery({
@@ -54,7 +56,11 @@ export function BuildsModeration() {
                   </span>
                 </div>
               </div>
-              <Eye className="h-5 w-5 text-muted-foreground" />
+              <Link to={`/builder?load=${build.id}`}>
+                <Button variant="outline" size="icon">
+                  <Eye className="h-4 w-4" />
+                </Button>
+              </Link>
             </div>
           </CardHeader>
           <CardContent>

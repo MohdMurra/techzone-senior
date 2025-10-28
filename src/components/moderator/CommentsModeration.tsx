@@ -112,7 +112,7 @@ export function CommentsModeration() {
           </CardHeader>
           <CardContent>
             <div className="text-sm text-muted-foreground">
-              By {comment.profile?.full_name || comment.profile?.email || "Unknown"} • {new Date(comment.created_at).toLocaleDateString()}
+              By <span className="font-medium text-foreground">{comment.profile?.full_name || comment.profile?.email || "Unknown"}</span> • {new Date(comment.created_at).toLocaleDateString()}
             </div>
           </CardContent>
         </Card>
