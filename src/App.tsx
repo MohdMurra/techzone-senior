@@ -18,6 +18,7 @@ import Profile from "./pages/Profile";
 import Builds from "./pages/Builds";
 import LearningHub from "./pages/LearningHub";
 import CourseDetail from "./pages/CourseDetail";
+import CourseCheckout from "./pages/CourseCheckout";
 import LessonDetail from "./pages/LessonDetail";
 import BlogDetail from "./pages/BlogDetail";
 import Shipping from "./pages/Shipping";
@@ -50,6 +51,7 @@ const App = () => (
           <Route path="/builds" element={<Builds />} />
           <Route path="/learning-hub" element={<LearningHub />} />
           <Route path="/course/:id" element={<CourseDetail />} />
+          <Route path="/course-checkout" element={<CourseCheckout />} />
           <Route path="/lesson/:id" element={<LessonDetail />} />
           <Route path="/blog/:slug" element={<BlogDetail />} />
           <Route path="/shipping" element={<Shipping />} />

@@ -9,7 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Navigate, Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, ExternalLink, Package, Edit } from "lucide-react";
+import { Trash2, ExternalLink, Package, Edit, GraduationCap, BookOpen, Play, ArrowRight } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function Profile() {
@@ -64,6 +64,20 @@ export default function Profile() {
         .select('*')
         .eq('user_id', session.user.id)
         .order('created_at', { ascending: false });
+      return data || [];
+    },
+    enabled: !!session?.user?.id
+  });
+
+  const { data: enrollments } = useQuery({
+    queryKey: ['user-enrollments', session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return [];
+      const { data } = await supabase
+        .from('course_enrollments')
+        .select('*, courses(*)')
+        .eq('user_id', session.user.id)
+        .order('enrolled_at', { ascending: false });
       return data || [];
     },
     enabled: !!session?.user?.id
@@ -130,8 +144,9 @@ export default function Profile() {
       <div className="container py-8 flex-1">
         <div className="max-w-4xl mx-auto">
           <Tabs defaultValue="profile" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="profile">Profile</TabsTrigger>
+              <TabsTrigger value="courses">My Courses</TabsTrigger>
               <TabsTrigger value="builds">My Builds</TabsTrigger>
               <TabsTrigger value="orders">Orders</TabsTrigger>
             </TabsList>
@@ -199,9 +214,82 @@ export default function Profile() {
               </Card>
             </TabsContent>
 
+            {/* My Courses Tab */}
+            <TabsContent value="courses">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <GraduationCap className="h-5 w-5" />
+                    <CardTitle>My Enrolled Courses ({enrollments?.length || 0})</CardTitle>
+                  </div>
+                  <CardDescription>Courses you've enrolled in</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {enrollments && enrollments.length > 0 ? (
+                    <div className="space-y-4">
+                      {enrollments.map((enrollment: any) => (
+                        <div key={enrollment.id} className="border rounded-lg p-4">
+                          <div className="flex gap-4">
+                            <div className="w-32 h-20 rounded overflow-hidden flex-shrink-0">
+                              <img 
+                                src={enrollment.courses?.image_url || '/placeholder.svg'} 
+                                alt={enrollment.courses?.title}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <h3 className="font-semibold text-lg">{enrollment.courses?.title}</h3>
+                                  <p className="text-sm text-muted-foreground">
+                                    by {enrollment.courses?.instructor}
+                                  </p>
+                                </div>
+                                <Link to={`/course/${enrollment.course_id}`}>
+                                  <Button size="sm">
+                                    <Play className="h-4 w-4 mr-1" />
+                                    Continue
+                                  </Button>
+                                </Link>
+                              </div>
+                              <div className="mt-3">
+                                <div className="flex justify-between text-sm mb-1">
+                                  <span>Progress</span>
+                                  <span>{enrollment.progress || 0}%</span>
+                                </div>
+                                <div className="w-full bg-muted rounded-full h-2">
+                                  <div 
+                                    className="bg-primary h-2 rounded-full transition-all" 
+                                    style={{ width: `${enrollment.progress || 0}%` }}
+                                  />
+                                </div>
+                              </div>
+                              <div className="mt-2 text-xs text-muted-foreground">
+                                Enrolled: {new Date(enrollment.enrolled_at).toLocaleDateString()}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                      <p className="text-muted-foreground mb-4">You haven't enrolled in any courses yet</p>
+                      <Link to="/learning-hub">
+                        <Button>
+                          Browse Courses
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
             {/* Builds Tab */}
             <TabsContent value="builds">
-
               <Card>
                 <CardHeader>
                   <CardTitle>My Builds ({builds?.length || 0})</CardTitle>
