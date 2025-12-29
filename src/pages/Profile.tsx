@@ -9,7 +9,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Navigate, Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, ExternalLink, Package, Edit, GraduationCap, BookOpen, Play, ArrowRight } from "lucide-react";
+import { Trash2, ExternalLink, Package, Edit, GraduationCap, BookOpen, Play, ArrowRight, Award, Download } from "lucide-react";
+import jsPDF from "jspdf";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function Profile() {
@@ -127,6 +128,81 @@ export default function Profile() {
     }
   });
 
+  const generateCertificate = (courseTitle: string) => {
+    const doc = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    doc.setFillColor(15, 23, 42);
+    doc.rect(0, 0, 297, 210, 'F');
+
+    doc.setDrawColor(59, 130, 246);
+    doc.setLineWidth(3);
+    doc.rect(10, 10, 277, 190);
+
+    doc.setDrawColor(147, 197, 253);
+    doc.setLineWidth(0.5);
+    doc.rect(15, 15, 267, 180);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(36);
+    doc.setTextColor(255, 255, 255);
+    doc.text('CERTIFICATE OF COMPLETION', 148.5, 50, { align: 'center' });
+
+    doc.setDrawColor(59, 130, 246);
+    doc.setLineWidth(1);
+    doc.line(74, 58, 223, 58);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(14);
+    doc.setTextColor(203, 213, 225);
+    doc.text('This is to certify that', 148.5, 75, { align: 'center' });
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(28);
+    doc.setTextColor(59, 130, 246);
+    doc.text(session?.user?.email || 'Student', 148.5, 92, { align: 'center' });
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(14);
+    doc.setTextColor(203, 213, 225);
+    doc.text('has successfully completed the course', 148.5, 108, { align: 'center' });
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(22);
+    doc.setTextColor(255, 255, 255);
+    doc.text(courseTitle, 148.5, 125, { align: 'center' });
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(12);
+    doc.setTextColor(148, 163, 184);
+    const date = new Date().toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+    doc.text(`Completed on ${date}`, 148.5, 145, { align: 'center' });
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.setTextColor(59, 130, 246);
+    doc.text('RigFreaks Learning Hub', 148.5, 175, { align: 'center' });
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(148, 163, 184);
+    doc.text('Certificate ID: ' + crypto.randomUUID().slice(0, 8).toUpperCase(), 148.5, 185, { align: 'center' });
+
+    doc.save(`Certificate-${courseTitle.replace(/\s+/g, '-')}.pdf`);
+
+    toast({
+      title: "Certificate Downloaded!",
+      description: "Your completion certificate has been saved."
+    });
+  };
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     toast({ title: "Signed out successfully" });
@@ -240,17 +316,35 @@ export default function Profile() {
                             <div className="flex-1">
                               <div className="flex justify-between items-start">
                                 <div>
-                                  <h3 className="font-semibold text-lg">{enrollment.courses?.title}</h3>
+                                  <h3 className="font-semibold text-lg flex items-center gap-2">
+                                    {enrollment.courses?.title}
+                                    {enrollment.progress === 100 && (
+                                      <Award className="h-5 w-5 text-green-600" />
+                                    )}
+                                  </h3>
                                   <p className="text-sm text-muted-foreground">
                                     by {enrollment.courses?.instructor}
                                   </p>
                                 </div>
-                                <Link to={`/course/${enrollment.course_id}`}>
-                                  <Button size="sm">
-                                    <Play className="h-4 w-4 mr-1" />
-                                    Continue
-                                  </Button>
-                                </Link>
+                                <div className="flex gap-2">
+                                  {enrollment.progress === 100 && (
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline"
+                                      className="text-green-600 border-green-600 hover:bg-green-50"
+                                      onClick={() => generateCertificate(enrollment.courses?.title || 'Course')}
+                                    >
+                                      <Download className="h-4 w-4 mr-1" />
+                                      Certificate
+                                    </Button>
+                                  )}
+                                  <Link to={`/course/${enrollment.course_id}`}>
+                                    <Button size="sm">
+                                      <Play className="h-4 w-4 mr-1" />
+                                      {enrollment.progress === 100 ? 'Review' : 'Continue'}
+                                    </Button>
+                                  </Link>
+                                </div>
                               </div>
                               <div className="mt-3">
                                 <div className="flex justify-between text-sm mb-1">

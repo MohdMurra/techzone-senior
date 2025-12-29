@@ -4,8 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { Clock, BookOpen, CheckCircle, Play, ArrowLeft, Lock, Users, Award } from "lucide-react";
+import { Clock, BookOpen, CheckCircle, Play, ArrowLeft, Lock, Users, Award, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import jsPDF from "jspdf";
 
 export default function CourseDetail() {
   const { id } = useParams();
@@ -90,6 +91,83 @@ export default function CourseDetail() {
       });
     }
   });
+
+  const generateCertificate = () => {
+    if (!course || !session?.user) return;
+
+    const doc = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    doc.setFillColor(15, 23, 42);
+    doc.rect(0, 0, 297, 210, 'F');
+
+    doc.setDrawColor(59, 130, 246);
+    doc.setLineWidth(3);
+    doc.rect(10, 10, 277, 190);
+
+    doc.setDrawColor(147, 197, 253);
+    doc.setLineWidth(0.5);
+    doc.rect(15, 15, 267, 180);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(36);
+    doc.setTextColor(255, 255, 255);
+    doc.text('CERTIFICATE OF COMPLETION', 148.5, 50, { align: 'center' });
+
+    doc.setDrawColor(59, 130, 246);
+    doc.setLineWidth(1);
+    doc.line(74, 58, 223, 58);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(14);
+    doc.setTextColor(203, 213, 225);
+    doc.text('This is to certify that', 148.5, 75, { align: 'center' });
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(28);
+    doc.setTextColor(59, 130, 246);
+    doc.text(session.user.email || 'Student', 148.5, 92, { align: 'center' });
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(14);
+    doc.setTextColor(203, 213, 225);
+    doc.text('has successfully completed the course', 148.5, 108, { align: 'center' });
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(22);
+    doc.setTextColor(255, 255, 255);
+    doc.text(course.title, 148.5, 125, { align: 'center' });
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(12);
+    doc.setTextColor(148, 163, 184);
+    const date = new Date().toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+    doc.text(`Completed on ${date}`, 148.5, 145, { align: 'center' });
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.setTextColor(59, 130, 246);
+    doc.text('RigFreaks Learning Hub', 148.5, 175, { align: 'center' });
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(148, 163, 184);
+    doc.text('Certificate ID: ' + crypto.randomUUID().slice(0, 8).toUpperCase(), 148.5, 185, { align: 'center' });
+
+    doc.save(`Certificate-${course.title.replace(/\s+/g, '-')}.pdf`);
+
+    toast({
+      title: "Certificate Downloaded!",
+      description: "Your completion certificate has been saved."
+    });
+  };
 
   const handleEnroll = () => {
     if (!session) {
@@ -277,10 +355,17 @@ export default function CourseDetail() {
               <CardContent className="space-y-4">
                 {isEnrolled ? (
                   <div className="space-y-4">
-                    <div className="flex items-center gap-2 text-green-600 bg-green-50 p-3 rounded-lg">
-                      <CheckCircle className="h-5 w-5" />
-                      <span className="font-semibold">You're enrolled!</span>
-                    </div>
+                    {enrollment?.progress === 100 ? (
+                      <div className="flex items-center gap-2 text-green-600 bg-green-50 p-3 rounded-lg">
+                        <Award className="h-5 w-5" />
+                        <span className="font-semibold">Course Completed!</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 text-green-600 bg-green-50 p-3 rounded-lg">
+                        <CheckCircle className="h-5 w-5" />
+                        <span className="font-semibold">You're enrolled!</span>
+                      </div>
+                    )}
                     <div>
                       <div className="flex justify-between text-sm mb-1">
                         <span>Progress</span>
@@ -293,11 +378,21 @@ export default function CourseDetail() {
                         />
                       </div>
                     </div>
+                    {enrollment?.progress === 100 && (
+                      <Button 
+                        className="w-full bg-green-600 hover:bg-green-700"
+                        onClick={generateCertificate}
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Download Certificate
+                      </Button>
+                    )}
                     {lessons && lessons.length > 0 && (
                       <Link to={`/lesson/${lessons[0].id}`}>
-                        <Button className="w-full">
+                        <Button className="w-full" variant={enrollment?.progress === 100 ? "outline" : "default"}>
                           <Play className="h-4 w-4 mr-2" />
-                          {enrollment?.progress ? 'Continue Learning' : 'Start Course'}
+                          {enrollment?.progress === 100 ? 'Review Course' : 
+                           enrollment?.progress ? 'Continue Learning' : 'Start Course'}
                         </Button>
                       </Link>
                     )}
