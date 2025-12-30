@@ -9,6 +9,54 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Edit, Trash2 } from "lucide-react";
+import { z } from "zod";
+
+const productSchema = z.object({
+  name: z.string()
+    .trim()
+    .min(1, 'Name is required')
+    .max(200, 'Name too long (max 200 chars)'),
+  
+  description: z.string()
+    .trim()
+    .max(2000, 'Description too long (max 2000 chars)')
+    .optional()
+    .or(z.literal('')),
+  
+  slug: z.string()
+    .trim()
+    .min(1, 'Slug is required')
+    .max(100, 'Slug too long')
+    .regex(/^[a-z0-9-]+$/, 'Slug must contain only lowercase letters, numbers, and hyphens'),
+  
+  price: z.number()
+    .min(0.01, 'Price must be at least $0.01')
+    .max(999999, 'Price too high (max $999,999)'),
+  
+  sale_price: z.number()
+    .min(0.01, 'Sale price must be at least $0.01')
+    .max(999999, 'Sale price too high')
+    .nullable()
+    .optional(),
+  
+  stock: z.number()
+    .int('Stock must be a whole number')
+    .min(0, 'Stock cannot be negative')
+    .max(999999, 'Stock too high (max 999,999)'),
+  
+  image_url: z.string()
+    .url('Must be a valid URL')
+    .max(500, 'URL too long')
+    .optional()
+    .or(z.literal('')),
+  
+  category: z.enum(['laptop', 'cpu', 'gpu', 'motherboard', 'ram', 'storage', 'psu', 'case', 'cooler'])
+}).refine((data) => {
+  if (data.sale_price && data.sale_price >= data.price) {
+    return false;
+  }
+  return true;
+}, { message: 'Sale price must be less than regular price', path: ['sale_price'] });
 
 export const ProductManagement = () => {
   const { toast } = useToast();
@@ -94,12 +142,32 @@ export const ProductManagement = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    saveMutation.mutate({
-      ...formData,
+    
+    const dataToValidate = {
+      name: formData.name,
+      description: formData.description || '',
+      slug: formData.slug,
       price: Number(formData.price),
       sale_price: formData.sale_price ? Number(formData.sale_price) : null,
-      stock: Number(formData.stock)
-    });
+      stock: Number(formData.stock),
+      image_url: formData.image_url || '',
+      category: formData.category as 'laptop' | 'cpu' | 'gpu' | 'motherboard' | 'ram' | 'storage' | 'psu' | 'case' | 'cooler'
+    };
+    
+    const result = productSchema.safeParse(dataToValidate);
+    
+    if (!result.success) {
+      const errorMessage = result.error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`).join(', ');
+      
+      toast({ 
+        title: "Validation Error", 
+        description: errorMessage,
+        variant: "destructive" 
+      });
+      return;
+    }
+    
+    saveMutation.mutate(result.data);
   };
 
   return (
