@@ -268,6 +268,56 @@ export type Database = {
         }
         Relationships: []
       }
+      flash_sales: {
+        Row: {
+          created_at: string
+          discount_percent: number
+          ends_at: string
+          id: string
+          is_active: boolean | null
+          original_price: number
+          product_id: string
+          sale_price: number
+          sold_count: number | null
+          starts_at: string
+          stock_limit: number | null
+        }
+        Insert: {
+          created_at?: string
+          discount_percent: number
+          ends_at: string
+          id?: string
+          is_active?: boolean | null
+          original_price: number
+          product_id: string
+          sale_price: number
+          sold_count?: number | null
+          starts_at?: string
+          stock_limit?: number | null
+        }
+        Update: {
+          created_at?: string
+          discount_percent?: number
+          ends_at?: string
+          id?: string
+          is_active?: boolean | null
+          original_price?: number
+          product_id?: string
+          sale_price?: number
+          sold_count?: number | null
+          starts_at?: string
+          stock_limit?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flash_sales_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lesson_completions: {
         Row: {
           completed_at: string
